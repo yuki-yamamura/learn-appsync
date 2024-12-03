@@ -1,6 +1,4 @@
-import { gql, useSubscription } from "@apollo/client";
-import { client } from "./lib/apollo/client";
-import { useState, useEffect } from "react";
+import { gql, useQuery, useSubscription } from "@apollo/client";
 
 type Todo = {
   id: string;
@@ -12,45 +10,35 @@ type Todo = {
 
 const CREATE_TODO_SUBSCRIPTION = gql`
   subscription OnCreateTodo {
-    createTodo {
+    onCreateTodo {
       id
       name
-      where
       when
+      where
       description
     }
   }
 `;
 
+const GET_TODOS = gql`
+  query listTodos {
+    listTodos {
+      items {
+        id
+        name
+        when
+        where
+        description
+      }
+    }
+  }
+`;
+
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
   const { data: createSubData, error: createSubError } = useSubscription(
     CREATE_TODO_SUBSCRIPTION
   );
-
-  console.log({ createSubData });
-
-  useEffect(() => {
-    client
-      .query({
-        query: gql`
-          query {
-            listTodos {
-              items {
-                id
-                name
-                when
-                where
-                description
-              }
-            }
-          }
-        `,
-      })
-      .then((result) => {
-        setTodos(result.data.listTodos.items);
-      });
-  }, []);
+  const { data: todos, loading } = useQuery(GET_TODOS);
 
   if (createSubError) {
     console.error({ createSubError });
@@ -58,14 +46,22 @@ function App() {
     return <div>Something went wrong.</div>;
   }
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  console.log({ createSubData });
+
   return (
     <>
-      <div>{createSubData}</div>
       <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.name}</li>
+        {(todos.listTodos.items as Todo[]).map((todo) => (
+          <li key={todo.id}>
+            <span>{todo.name}</span>
+          </li>
         ))}
       </ul>
+      <div>{createSubData?.onCreateTodo?.name ?? "hogehoge"}</div>
     </>
   );
 }
