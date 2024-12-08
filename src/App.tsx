@@ -1,4 +1,5 @@
 import { gql, useQuery, useSubscription } from "@apollo/client";
+import { HogeSubscription } from "./gql/graphql";
 
 type Todo = {
   id: string;
@@ -9,12 +10,9 @@ type Todo = {
 };
 
 const CREATE_TODO_SUBSCRIPTION = gql`
-  subscription OnCreateTodo {
+  subscription Hoge {
     onCreateTodo {
       id
-      name
-      when
-      where
       description
     }
   }
@@ -35,9 +33,8 @@ const GET_TODOS = gql`
 `;
 
 function App() {
-  const { data: createSubData, error: createSubError } = useSubscription(
-    CREATE_TODO_SUBSCRIPTION
-  );
+  const { data: createSubData, error: createSubError } =
+    useSubscription<HogeSubscription>(CREATE_TODO_SUBSCRIPTION);
   const { data: todos, loading } = useQuery(GET_TODOS);
 
   if (createSubError) {
@@ -61,7 +58,7 @@ function App() {
           </li>
         ))}
       </ul>
-      <div>{createSubData?.onCreateTodo?.name ?? "hogehoge"}</div>
+      <div>{createSubData?.onCreateTodo?.description ?? "hogehoge"}</div>
     </>
   );
 }
